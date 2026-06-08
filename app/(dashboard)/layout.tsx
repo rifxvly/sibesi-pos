@@ -6,11 +6,12 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await auth();
-  const user = session?.user
+  const rawUser = session?.user as Record<string, unknown> | undefined;
+  const user = rawUser
     ? {
-        username: session.user.username,
-        role: session.user.role,
-        email: session.user.email
+        username: (rawUser.username as string) ?? "",
+        role: (rawUser.role as string) ?? "",
+        email: (rawUser.email as string) ?? ""
       }
     : undefined;
 
