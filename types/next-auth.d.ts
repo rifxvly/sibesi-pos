@@ -8,6 +8,11 @@ declare module "next-auth" {
       username: string;
     } & DefaultSession["user"];
   }
+
+  interface User {
+    role?: "ADMIN" | "KASIR" | "SUPPLIER";
+    username?: string;
+  }
 }
 
 declare module "next-auth/jwt" {
