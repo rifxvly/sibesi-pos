@@ -75,3 +75,12 @@ export const stockAdjustmentSchema = z.object({
   keterangan: z.string().min(3),
   tipe: z.enum(["IN", "OUT", "ADJUSTMENT"]).default("ADJUSTMENT")
 });
+
+export const userSchema = z.object({
+  username: z.string().min(3).max(50),
+  email: z.string().email(),
+  password: z.string().min(6).optional(),
+  role: z.enum(["ADMIN", "KASIR", "SUPPLIER"]),
+  isActive: z.boolean().default(true),
+  supplierId: z.string().optional().nullable()
+});

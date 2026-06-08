@@ -5,7 +5,7 @@ import authConfig from "@/auth.config";
 
 const publicPaths = ["/login", "/mfa"];
 const publicApiPrefixes = ["/api/auth", "/api/wijayapay/webhook"];
-const protectedAppPaths = ["/dashboard", "/pos", "/products", "/stock", "/contracts", "/customers", "/reports", "/settings"];
+const protectedAppPaths = ["/dashboard", "/pos", "/products", "/stock", "/contracts", "/customers", "/reports", "/settings", "/users"];
 const roleHome = {
   ADMIN: "/dashboard",
   KASIR: "/pos",
@@ -59,6 +59,7 @@ export const config = {
     "/customers/:path*",
     "/reports/:path*",
     "/settings/:path*",
+    "/users/:path*",
     "/login",
     "/mfa",
     "/api/:path*"

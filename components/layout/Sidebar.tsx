@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Boxes, ClipboardList, LayoutDashboard, Package, ShoppingCart, Users, LogOut, Settings, ChevronRight } from "lucide-react";
+import { BarChart3, Boxes, ClipboardList, LayoutDashboard, Package, ShoppingCart, Users, LogOut, Settings, ChevronRight, UserCog } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const adminNavigation = [
   { href: "/products", label: "Produk", icon: Package },
   { href: "/stock", label: "Stok", icon: Boxes },
   { href: "/contracts", label: "Kontrak", icon: ClipboardList },
+  { href: "/users", label: "Pengguna", icon: UserCog },
   { href: "/reports", label: "Laporan", icon: BarChart3 },
   { href: "/settings", label: "Pengaturan", icon: Settings }
 ];
