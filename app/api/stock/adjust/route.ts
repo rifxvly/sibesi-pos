@@ -51,6 +51,7 @@ export async function POST(request: Request) {
 
   await prisma.stockMovement.create({
     data: {
+      id: crypto.randomUUID(),
       productId: parsed.data.productId,
       tipe: parsed.data.tipe,
       jumlah: new Prisma.Decimal(parsed.data.jumlah),

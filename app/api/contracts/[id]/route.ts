@@ -1,21 +1,29 @@
 import { NextResponse } from "next/server";
 
-import { ensureAdminApi } from "@/lib/access";
+import { getAuthorizedApiUser } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const guard = await ensureAdminApi();
+  const { user, response } = await getAuthorizedApiUser(["ADMIN", "SUPPLIER"]);
 
-  if (guard) {
-    return guard;
+  if (response || !user) {
+    return response;
   }
 
-  const contract = await prisma.contract.findUnique({
-    where: { id: params.id },
+  if (user.role === "SUPPLIER" && !user.supplierId) {
+    return NextResponse.json({ error: "Supplier account is not linked to a supplier." }, { status: 403 });
+  }
+
+  const contract = await prisma.contract.findFirst({
+    where: {
+      id: params.id,
+      ...(user.role === "SUPPLIER" ? { supplierId: user.supplierId } : {})
+    },
     include: {
       customer: true,
+      supplier: true,
       items: {
         include: {
           product: true

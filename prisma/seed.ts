@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { KategoriProduk, PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -198,7 +198,9 @@ async function main() {
       where: { kodeBarang: product.kodeBarang }
     });
     if (!existing) {
-      await prisma.product.create({ data: { ...product, id: crypto.randomUUID(), updatedAt: new Date() } });
+      await prisma.product.create({
+        data: { ...product, kategori: product.kategori as KategoriProduk, id: crypto.randomUUID(), updatedAt: new Date() }
+      });
     }
   }
 

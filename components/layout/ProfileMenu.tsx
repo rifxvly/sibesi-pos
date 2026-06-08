@@ -9,7 +9,7 @@ export function ProfileMenu({
 }: {
   user: {
     username: string;
-    role: "ADMIN" | "KASIR";
+    role: "ADMIN" | "KASIR" | "SUPPLIER";
     email?: string | null;
   };
 }) {
@@ -53,7 +53,7 @@ export function ProfileMenu({
             <p className="mt-2 text-base font-semibold text-stone-900">{user.username}</p>
             <p className="mt-1 text-sm text-stone-600">{user.email ?? "Akun internal SiBesi POS"}</p>
             <p className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
-              {user.role === "ADMIN" ? "Admin Operasional" : "Kasir Aktif"}
+              {user.role === "ADMIN" ? "Admin Operasional" : user.role === "KASIR" ? "Kasir Aktif" : "Supplier"}
             </p>
           </div>
 

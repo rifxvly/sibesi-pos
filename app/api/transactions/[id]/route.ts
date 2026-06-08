@@ -1,12 +1,19 @@
 import { Prisma, StatusTransaksi } from "@prisma/client";
 import { NextResponse } from "next/server";
 
+import { ensureRoleApi } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { getActorUserId } from "@/lib/server-session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
+
+  if (guard) {
+    return guard;
+  }
+
   const transaction = await prisma.transaction.findUnique({
     where: { id: params.id },
     include: {
@@ -24,6 +31,12 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 }
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
+
+  if (guard) {
+    return guard;
+  }
+
   const payload = (await request.json()) as { status?: StatusTransaksi };
 
   if (!payload.status) {
@@ -103,6 +116,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
         await tx.stockMovement.create({
           data: {
+            id: crypto.randomUUID(),
             productId: item.productId,
             tipe: "OUT",
             jumlah: new Prisma.Decimal(item.jumlah),

@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         }),
         prisma.stockMovement.create({
           data: {
+            id: crypto.randomUUID(),
             productId: item.productId,
             tipe: "OUT",
             jumlah: new Prisma.Decimal(item.jumlah),

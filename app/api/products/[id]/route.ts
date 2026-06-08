@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { ensureAdminApi } from "@/lib/access";
+import { ensureAdminApi, ensureRoleApi } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const guard = await ensureAdminApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;

@@ -28,7 +28,8 @@ type HistoryEntry = {
   user: string;
 };
 
-export function StockManager() {
+export function StockManager({ role = "ADMIN" }: { role?: "ADMIN" | "KASIR" | "SUPPLIER" }) {
+  const canAdjustStock = role === "ADMIN";
   const [products, setProducts] = useState<ProductStock[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,8 @@ export function StockManager() {
   const totalValue = products.reduce((sum, p) => sum + (Number(p.stok) * (Number(p.hargaPokok) || 15000)), 0);
 
   function openModal(product: ProductStock) {
+    if (!canAdjustStock) return;
+
     setSelectedProduct(product);
     setAdjustType("IN");
     setAdjustAmount("");
@@ -223,14 +226,14 @@ export function StockManager() {
                   <th className="px-5 py-4 text-center">Stok Saat Ini</th>
                   <th className="px-5 py-4 text-center">Stok Minimum</th>
                   <th className="px-5 py-4 text-center">Status</th>
-                  <th className="px-5 py-4 text-center">Aksi</th>
+                  {canAdjustStock ? <th className="px-5 py-4 text-center">Aksi</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {loading ? (
-                  <tr><td colSpan={7} className="px-5 py-8 text-center text-stone-500">Memuat...</td></tr>
+                  <tr><td colSpan={canAdjustStock ? 7 : 6} className="px-5 py-8 text-center text-stone-500">Memuat...</td></tr>
                 ) : paginatedProducts.length === 0 ? (
-                  <tr><td colSpan={7} className="px-5 py-8 text-center text-stone-500">Tidak ada produk.</td></tr>
+                  <tr><td colSpan={canAdjustStock ? 7 : 6} className="px-5 py-8 text-center text-stone-500">Tidak ada produk.</td></tr>
                 ) : paginatedProducts.map(product => {
                   const stok = Number(product.stok);
                   const min = Number(product.stokMinimum);
@@ -255,14 +258,14 @@ export function StockManager() {
                           {status}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-center">
+                      {canAdjustStock ? <td className="px-5 py-4 text-center">
                         <button 
                           onClick={() => openModal(product)}
                           className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors"
                         >
                           Sesuaikan Stok
                         </button>
-                      </td>
+                      </td> : null}
                     </tr>
                   );
                 })}
@@ -343,12 +346,12 @@ export function StockManager() {
                         {isHabis ? "Habis" : "Stok Rendah"}
                       </span>
                     </div>
-                    <button 
+                    {canAdjustStock ? <button 
                       onClick={() => openModal(product)}
                       className="shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 transition-colors shadow-sm"
                     >
                       Sesuaikan
-                    </button>
+                    </button> : null}
                   </div>
                 );
               })

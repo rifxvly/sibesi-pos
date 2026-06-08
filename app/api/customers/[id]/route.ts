@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { ensureAdminApi } from "@/lib/access";
+import { ensureRoleApi } from "@/lib/access";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { customerSchema } from "@/lib/validations";
@@ -8,7 +8,7 @@ import { customerSchema } from "@/lib/validations";
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const guard = await ensureAdminApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;
@@ -30,7 +30,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  const guard = await ensureAdminApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;
@@ -64,7 +64,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  const guard = await ensureAdminApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;

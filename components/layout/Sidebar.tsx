@@ -22,15 +22,25 @@ const kasirNavigation = [
   { href: "/customers", label: "Pelanggan", icon: Users }
 ];
 
+const supplierNavigation = [
+  { href: "/contracts", label: "Kontrak", icon: ClipboardList }
+];
+
+const roleLabels = {
+  ADMIN: "Administrator",
+  KASIR: "Kasir",
+  SUPPLIER: "Supplier"
+} as const;
+
 export function Sidebar({
   role,
   username = "Admin"
 }: {
-  role?: "ADMIN" | "KASIR";
+  role?: "ADMIN" | "KASIR" | "SUPPLIER";
   username?: string;
 }) {
   const pathname = usePathname();
-  const navigation = role === "KASIR" ? kasirNavigation : adminNavigation;
+  const navigation = role === "KASIR" ? kasirNavigation : role === "SUPPLIER" ? supplierNavigation : adminNavigation;
 
   return (
     <aside className="sticky top-0 hidden h-screen w-[260px] flex-col bg-[#1c1917] lg:flex">
@@ -84,7 +94,7 @@ export function Sidebar({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-white truncate">{username}</p>
-            <p className="text-[10px] text-stone-400 truncate">{role === "KASIR" ? "Kasir" : "Administrator"}</p>
+            <p className="text-[10px] text-stone-400 truncate">{role ? roleLabels[role] : roleLabels.ADMIN}</p>
           </div>
           <ChevronRight className="h-4 w-4 text-stone-500 shrink-0" />
         </div>

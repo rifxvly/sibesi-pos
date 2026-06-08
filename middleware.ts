@@ -5,26 +5,33 @@ import authConfig from "@/auth.config";
 
 const publicPaths = ["/login", "/mfa"];
 const publicApiPrefixes = ["/api/auth", "/api/wijayapay/webhook"];
-const kasirAllowedPaths = ["/pos", "/stock", "/customers"];
+const protectedAppPaths = ["/dashboard", "/pos", "/products", "/stock", "/contracts", "/customers", "/reports", "/settings"];
+const roleHome = {
+  ADMIN: "/dashboard",
+  KASIR: "/pos",
+  SUPPLIER: "/contracts"
+} as const;
+const roleAllowedPaths = {
+  ADMIN: protectedAppPaths,
+  KASIR: ["/pos", "/stock", "/customers"],
+  SUPPLIER: ["/contracts"]
+} as const;
 const { auth } = NextAuth(authConfig);
 
 export default auth((request) => {
   const { pathname } = request.nextUrl;
-  const userRole = request.auth?.user?.role;
+  const userRole = request.auth?.user?.role as keyof typeof roleAllowedPaths | undefined;
   const isLoggedIn = Boolean(request.auth?.user);
   const isPublicPage = publicPaths.includes(pathname);
   const isPublicApi = publicApiPrefixes.some((prefix) => pathname.startsWith(prefix));
-  const isProtectedAppRoute =
-    ["/dashboard", "/pos", "/products", "/stock", "/contracts", "/customers", "/reports", "/settings"].some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-    );
+  const isProtectedAppRoute = protectedAppPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
   if (isPublicApi) {
     return NextResponse.next();
   }
 
   if (isPublicPage && isLoggedIn) {
-    return NextResponse.redirect(new URL(userRole === "KASIR" ? "/pos" : "/dashboard", request.url));
+    return NextResponse.redirect(new URL(userRole ? roleHome[userRole] : "/dashboard", request.url));
   }
 
   if (isProtectedAppRoute && !isLoggedIn) {
@@ -32,11 +39,11 @@ export default auth((request) => {
   }
 
   if (
-    userRole === "KASIR" &&
+    userRole &&
     isProtectedAppRoute &&
-    !kasirAllowedPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+    !roleAllowedPaths[userRole].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
   ) {
-    return NextResponse.redirect(new URL("/pos", request.url));
+    return NextResponse.redirect(new URL(roleHome[userRole], request.url));
   }
 
   return NextResponse.next();

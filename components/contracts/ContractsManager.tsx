@@ -43,7 +43,8 @@ const emptyForm: ContractForm = {
   items: []
 };
 
-export function ContractsManager() {
+export function ContractsManager({ role = "ADMIN" }: { role?: "ADMIN" | "KASIR" | "SUPPLIER" }) {
+  const canManageContracts = role === "ADMIN";
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [contracts, setContracts] = useState<ContractRecord[]>([]);
@@ -61,18 +62,29 @@ export function ContractsManager() {
   async function loadData() {
     setLoading(true);
     try {
-      const [customersRes, productsRes, contractsRes] = await Promise.all([
-        fetch("/api/customers", { cache: "no-store" }),
-        fetch("/api/products", { cache: "no-store" }),
-        fetch("/api/contracts", { cache: "no-store" })
-      ]);
-      const [customersData, productsData, contractsData] = await Promise.all([
-        customersRes.json(), productsRes.json(), contractsRes.json()
-      ]);
-      if (customersRes.ok && productsRes.ok && contractsRes.ok) {
-        setCustomers(customersData);
-        setProducts(productsData);
+      const contractsRes = await fetch("/api/contracts", { cache: "no-store" });
+      const contractsData = await contractsRes.json();
+
+      if (contractsRes.ok) {
         setContracts(contractsData);
+      }
+
+      if (canManageContracts) {
+        const [customersRes, productsRes] = await Promise.all([
+          fetch("/api/customers", { cache: "no-store" }),
+          fetch("/api/products", { cache: "no-store" })
+        ]);
+        const [customersData, productsData] = await Promise.all([
+          customersRes.json(), productsRes.json()
+        ]);
+
+        if (customersRes.ok) {
+          setCustomers(customersData);
+        }
+
+        if (productsRes.ok) {
+          setProducts(productsData);
+        }
       }
     } catch {
       // ignore
@@ -203,7 +215,7 @@ export function ContractsManager() {
   return (
     <div className="space-y-6">
       {/* Top right button */}
-      <div className="flex justify-end hidden lg:flex">
+      {canManageContracts ? <div className="flex justify-end hidden lg:flex">
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-800 shadow-sm"
@@ -211,7 +223,7 @@ export function ContractsManager() {
           <Plus className="h-4 w-4" />
           Buat Kontrak Baru
         </button>
-      </div>
+      </div> : null}
 
       <div className={`grid gap-6 transition-all duration-300 ${selectedContract ? 'xl:grid-cols-[minmax(0,1fr)_420px]' : 'grid-cols-1'}`}>
 
@@ -259,8 +271,8 @@ export function ContractsManager() {
                       <div className="flex items-center justify-center gap-2">
                         <button className="text-stone-400 hover:text-stone-900"><Eye className="h-4 w-4" /></button>
                         <button className="text-stone-400 hover:text-stone-900"><FileText className="h-4 w-4" /></button>
-                        {contract.status === "REVIEW" && <button className="text-stone-400 hover:text-emerald-600"><Check className="h-4 w-4" /></button>}
-                        {contract.status === "REVIEW" && <button className="text-stone-400 hover:text-rose-600"><X className="h-4 w-4" /></button>}
+                        {canManageContracts && contract.status === "REVIEW" && <button className="text-stone-400 hover:text-emerald-600"><Check className="h-4 w-4" /></button>}
+                        {canManageContracts && contract.status === "REVIEW" && <button className="text-stone-400 hover:text-rose-600"><X className="h-4 w-4" /></button>}
                       </div>
                     </td>
                   </tr>
@@ -364,7 +376,7 @@ export function ContractsManager() {
             {/* Actions */}
             <div className="p-5 border-t border-stone-100 bg-stone-50 rounded-b-2xl flex items-center justify-between gap-3">
               <button onClick={() => window.open(`/api/contracts/${selectedContract.id}/pdf`, "_blank")} className="px-4 py-2 text-sm font-semibold text-stone-700 bg-white border border-stone-200 rounded-xl shadow-sm hover:bg-stone-50 transition">Generate PDF</button>
-              {selectedContract.status === "REVIEW" && (
+              {canManageContracts && selectedContract.status === "REVIEW" && (
                 <div className="flex gap-2">
                   <button onClick={() => handleDecision(selectedContract.id, "REJECTED")} className="px-4 py-2 text-sm font-semibold text-rose-600 bg-white border border-rose-200 rounded-xl shadow-sm hover:bg-rose-50 transition">Tolak</button>
                   <button onClick={() => handleDecision(selectedContract.id, "APPROVED")} className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-xl shadow-sm hover:bg-emerald-700 transition">Setujui</button>
@@ -376,7 +388,7 @@ export function ContractsManager() {
       </div>
 
       {/* Create Modal */}
-      {isModalOpen && (
+      {canManageContracts && isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 lg:p-12 animate-in fade-in duration-200">
           <div className="w-full max-w-6xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden">
             {/* Wizard Header */}

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { createGatewayPayment } from "@/lib/payment-gateway";
 import { prisma } from "@/lib/prisma";
+import { ensureRoleApi } from "@/lib/access";
 import { getActorUserId } from "@/lib/server-session";
 import { transactionSchema } from "@/lib/validations";
 import { generateTransactionNumber } from "@/lib/utils";
@@ -10,6 +11,12 @@ import { generateTransactionNumber } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
+
+  if (guard) {
+    return guard;
+  }
+
   const transactions = await prisma.transaction.findMany({
     include: {
       details: true,
@@ -23,6 +30,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
+
+  if (guard) {
+    return guard;
+  }
+
   const payload = await request.json();
   const parsed = transactionSchema.safeParse(payload);
 
@@ -79,6 +92,7 @@ export async function POST(request: Request) {
   const transaction = await prisma.$transaction(async (tx) => {
     const created = await tx.transaction.create({
       data: {
+        id: crypto.randomUUID(),
         noTransaksi,
         userId: actorUserId,
         customerId: parsed.data.customerId ?? undefined,
@@ -95,6 +109,7 @@ export async function POST(request: Request) {
         catatan: parsed.data.catatan ?? undefined,
         details: {
           create: parsed.data.items.map((item) => ({
+            id: crypto.randomUUID(),
             productId: item.productId,
             jumlah: new Prisma.Decimal(item.jumlah),
             satuan: item.satuan,
@@ -121,6 +136,7 @@ export async function POST(request: Request) {
 
         await tx.stockMovement.create({
           data: {
+            id: crypto.randomUUID(),
             productId: item.productId,
             tipe: "OUT",
             jumlah: new Prisma.Decimal(item.jumlah),

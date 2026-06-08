@@ -1,12 +1,19 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { NextResponse } from "next/server";
 
+import { ensureRoleApi } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
+
+  if (guard) {
+    return guard;
+  }
+
   const transaction = await prisma.transaction.findUnique({
     where: { id: params.id },
     include: {

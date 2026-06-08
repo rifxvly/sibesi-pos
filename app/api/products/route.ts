@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { ensureAdminApi } from "@/lib/access";
+import { ensureAdminApi, ensureRoleApi } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const guard = await ensureAdminApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;
@@ -51,7 +51,11 @@ export async function POST(request: Request) {
   }
 
   const product = await prisma.product.create({
-    data: parsed.data
+    data: {
+      id: crypto.randomUUID(),
+      ...parsed.data,
+      updatedAt: new Date()
+    }
   });
 
   return NextResponse.json(product, { status: 201 });

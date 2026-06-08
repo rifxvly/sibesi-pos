@@ -29,7 +29,7 @@ const P = (...runs: TextRun[]) => new Paragraph({ spacing: { after: 120 }, child
 const PB = (text: string) => P(BOLD(text));
 const PN = (text: string) => P(NORMAL(text));
 const PL = (items: string[]) => items.map(i => new Paragraph({ spacing: { after: 80 }, children: [NORMAL("• " + i)], indent: { left: 720 } }));
-const PM = (text: string) => P(NORMAL(text), { spacing: { after: 60 } });
+const PM = (text: string) => new Paragraph({ spacing: { after: 60 }, children: [NORMAL(text)] });
 
 function makeTable(headers: string[], rows: string[][]): Table {
   return new Table({

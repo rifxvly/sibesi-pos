@@ -19,7 +19,7 @@ export function Navbar({
 }: {
   user?: {
     username: string;
-    role: "ADMIN" | "KASIR";
+    role: "ADMIN" | "KASIR" | "SUPPLIER";
     email?: string | null;
   };
 }) {
@@ -49,6 +49,8 @@ export function Navbar({
           <p className="text-sm text-stone-500 mt-1">Kelola semua data produk</p>
         ) : pathname === "/stock" ? (
           <p className="text-sm text-stone-500 mt-1">Kelola stok produk dan pergerakan stok</p>
+        ) : pathname === "/contracts" && user?.role === "SUPPLIER" ? (
+          <p className="text-sm text-stone-500 mt-1">Lihat kontrak yang terhubung dengan akun supplier Anda</p>
         ) : pathname === "/contracts" ? (
           <p className="text-sm text-stone-500 mt-1">Kelola kontrak penjualan dan kesepakatan dengan pelanggan</p>
         ) : pathname === "/customers" ? (

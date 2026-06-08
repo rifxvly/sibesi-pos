@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { ensureAuthenticatedApi } from "@/lib/access";
+import { ensureRoleApi } from "@/lib/access";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { customerSchema } from "@/lib/validations";
@@ -8,7 +8,7 @@ import { customerSchema } from "@/lib/validations";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const guard = await ensureAuthenticatedApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const guard = await ensureAuthenticatedApi();
+  const guard = await ensureRoleApi(["ADMIN", "KASIR"]);
 
   if (guard) {
     return guard;
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
 
   const customer = await prisma.customer.create({
     data: {
+      id: crypto.randomUUID(),
       nama: parsed.data.nama,
       tipe: parsed.data.tipe,
       perusahaan: parsed.data.perusahaan || null,

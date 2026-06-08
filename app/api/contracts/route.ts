@@ -1,7 +1,7 @@
 import { Prisma, StatusKontrak } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-import { ensureAdminApi } from "@/lib/access";
+import { ensureAdminApi, getAuthorizedApiUser } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { getActorUserId } from "@/lib/server-session";
 import { contractSchema } from "@/lib/validations";
@@ -10,16 +10,26 @@ import { generateContractNumber } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const guard = await ensureAdminApi();
+  const { user, response } = await getAuthorizedApiUser(["ADMIN", "SUPPLIER"]);
 
-  if (guard) {
-    return guard;
+  if (response || !user) {
+    return response;
+  }
+
+  if (user.role === "SUPPLIER" && !user.supplierId) {
+    return NextResponse.json({ error: "Supplier account is not linked to a supplier." }, { status: 403 });
   }
 
   const contracts = await prisma.contract.findMany({
+    where: user.role === "SUPPLIER" ? { supplierId: user.supplierId } : undefined,
     include: {
       customer: true,
-      items: true
+      supplier: true,
+      items: {
+        include: {
+          product: true
+        }
+      }
     },
     orderBy: { createdAt: "desc" }
   });
@@ -47,6 +57,7 @@ export async function POST(request: Request) {
 
   const contract = await prisma.contract.create({
     data: {
+      id: crypto.randomUUID(),
       noKontrak: generateContractNumber(contractCount + 1),
       customerId: parsed.data.customerId,
       transactionId: parsed.data.transactionId ?? undefined,
@@ -59,6 +70,7 @@ export async function POST(request: Request) {
       catatanAdmin: parsed.data.catatanAdmin ?? undefined,
       status: StatusKontrak.REVIEW,
       createdById: actorUserId,
+      updatedAt: new Date(),
       items: {
         create: parsed.data.items.map((item) => ({
           id: crypto.randomUUID(),

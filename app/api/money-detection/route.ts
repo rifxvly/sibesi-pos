@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { ensureAdminApi } from "@/lib/access";
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -11,6 +13,12 @@ const MODELS = [
 ];
 
 export async function POST(request: NextRequest) {
+  const guard = await ensureAdminApi();
+
+  if (guard) {
+    return guard;
+  }
+
   if (!OPENROUTER_API_KEY) {
     return NextResponse.json(
       { error: "OPENROUTER_API_KEY tidak dikonfigurasi" },

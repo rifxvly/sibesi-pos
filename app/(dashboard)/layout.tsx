@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = rawUser
     ? {
         username: (rawUser.username as string) ?? "",
-        role: (rawUser.role as "ADMIN" | "KASIR") ?? "KASIR",
+        role: (rawUser.role as "ADMIN" | "KASIR" | "SUPPLIER") ?? "KASIR",
         email: (rawUser.email as string) ?? ""
       }
     : undefined;
