@@ -1,0 +1,15 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: sibesi-pos-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: sibesi_pos
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - sibesi_mysql_data:/var/lib/mysql
+
+volumes:
+  sibesi_mysql_data:

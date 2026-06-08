@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply text-foreground antialiased bg-background;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+a {
+  @apply text-inherit no-underline;
+}
+
+* {
+  @apply border-border;
+}
+
+::selection {
+  background: rgba(28, 25, 23, 0.15);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
