@@ -50,3 +50,13 @@ prisma/migrations/
 # os
 Thumbs.db
 Desktop.ini
+
+# documents
+*.docx
+*.doc
+*.pdf
+
+# scripts
+SCRIPT-PRESENTASI.md
+BUG_BOUNTY.md
+DEPLOY.md

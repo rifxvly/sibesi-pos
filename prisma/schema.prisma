@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum MetodeBayar {
+  TUNAI
+  TRANSFER
+  KREDIT
+  QRIS
+  VIRTUAL_ACCOUNT
+
+  @@map("transaction_metodeBayar")
+}
+
+enum StatusTransaksi {
+  PENDING
+  PAID
+  CANCELLED
+
+  @@map("transaction_status")
+}
+
+enum StatusKontrak {
+  DRAFT
+  REVIEW
+  APPROVED
+  REJECTED
+
+  @@map("contract_status")
+}
+
+enum KategoriProduk {
+  BESI
+  SEMEN
+  PASIR
+  CAT
+  PAKU
+  ALAT
+  LAIN
+
+  @@map("product_kategori")
+}
+
+enum Role {
+  ADMIN
+  KASIR
+  SUPPLIER
+
+  @@map("user_role")
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id           String   @id
+  username     String   @unique
+  passwordHash String
+  role         Role     @default(KASIR)
+  email        String   @unique
+  mfaSecret    String?
+  mfaEnabled   Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  supplierId   String?
+
+  auditlogs              AuditLog[]
+  contractsAsCreator     Contract[]    @relation("ContractCreator")
+  contractsAsApprover    Contract[]    @relation("ContractApprover")
+  transactions           Transaction[]
+  supplier               Supplier?     @relation(fields: [supplierId], references: [id], map: "User_supplierId_fkey")
+  stockMovements         StockMovement[]
+
+  @@index([supplierId], map: "User_supplierId_fkey")
+  @@map("user")
+}
+
+model Product {
+  id          String           @id
+  kodeBarang  String           @unique
+  nama        String
+  kategori    KategoriProduk
+  satuan      String
+  hargaJual   Decimal          @db.Decimal(15, 2)
+  hargaPokok  Decimal?         @db.Decimal(15, 2)
+  stok        Decimal          @db.Decimal(15, 3)
+  stokMinimum Decimal          @db.Decimal(15, 3)
+  gambar      String?
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime
+
+  contractItems      ContractItem[]
+  stockMovements     StockMovement[]
+  transactionDetails TransactionDetail[]
+
+  @@map("product")
+}
+
+model Customer {
+  id         String   @id
+  nama       String
+  tipe       String   @default("PERORANGAN")
+  perusahaan String?
+  npwp       String?
+  alamat     String?
+  telepon    String?
+  email      String?
+  createdAt  DateTime @default(now())
+
+  contracts    Contract[]
+  transactions Transaction[]
+
+  @@map("customer")
+}
+
+model Transaction {
+  id             String          @id
+  noTransaksi    String          @unique
+  userId         String
+  customerId     String?
+  total          Decimal         @db.Decimal(15, 2)
+  diskon         Decimal         @default(0.00) @db.Decimal(15, 2)
+  totalAkhir     Decimal         @db.Decimal(15, 2)
+  metodeBayar    MetodeBayar
+  status         StatusTransaksi @default(PENDING)
+  uangDiterima   Decimal?        @db.Decimal(15, 2)
+  kembalian      Decimal?        @db.Decimal(15, 2)
+  catatan        String?
+  createdAt      DateTime        @default(now())
+  gatewayOrderId String?
+  gatewayPayUrl  String?
+  pakasirOrderId String?
+  pakasirPayUrl  String?
+
+  contract          Contract?
+  customer          Customer?          @relation(fields: [customerId], references: [id], map: "Transaction_customerId_fkey")
+  user              User               @relation(fields: [userId], references: [id], map: "Transaction_userId_fkey")
+  details           TransactionDetail[]
+
+  @@index([customerId], map: "Transaction_customerId_fkey")
+  @@index([userId], map: "Transaction_userId_fkey")
+  @@map("transaction")
+}
+
+model TransactionDetail {
+  id            String  @id
+  transactionId String
+  productId     String
+  jumlah        Decimal @db.Decimal(15, 3)
+  satuan        String
+  hargaSatuan   Decimal @db.Decimal(15, 2)
+  subtotal      Decimal @db.Decimal(15, 2)
+
+  product     Product     @relation(fields: [productId], references: [id], map: "TransactionDetail_productId_fkey")
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, map: "TransactionDetail_transactionId_fkey")
+
+  @@index([productId], map: "TransactionDetail_productId_fkey")
+  @@index([transactionId], map: "TransactionDetail_transactionId_fkey")
+  @@map("transactiondetail")
+}
+
+model Contract {
+  id              String        @id
+  noKontrak       String        @unique
+  transactionId   String?       @unique
+  customerId      String
+  filePdf         String?
+  hashValue       String?
+  totalNilai      Decimal?      @db.Decimal(15, 2)
+  dp              Decimal?      @db.Decimal(15, 2)
+  dpPersen        Decimal?      @db.Decimal(5, 2)
+  tempoPembayaran Int?
+  jadwalKirim     DateTime?
+  alamatKirim     String?
+  catatanAdmin    String?
+  status          StatusKontrak @default(DRAFT)
+  createdById     String?
+  approvedById    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  supplierId      String?
+
+  createdBy   User?        @relation("ContractCreator", fields: [createdById], references: [id], map: "Contract_createdById_fkey")
+  approvedBy  User?        @relation("ContractApprover", fields: [approvedById], references: [id], map: "Contract_approvedById_fkey")
+  customer    Customer     @relation(fields: [customerId], references: [id], map: "Contract_customerId_fkey")
+  supplier    Supplier?    @relation(fields: [supplierId], references: [id], map: "Contract_supplierId_fkey")
+  transaction Transaction? @relation(fields: [transactionId], references: [id], map: "Contract_transactionId_fkey")
+  items       ContractItem[]
+
+  @@index([approvedById], map: "Contract_approvedById_fkey")
+  @@index([createdById], map: "Contract_createdById_fkey")
+  @@index([customerId], map: "Contract_customerId_fkey")
+  @@index([supplierId], map: "Contract_supplierId_fkey")
+  @@map("contract")
+}
+
+model ContractItem {
+  id          String   @id
+  contractId  String
+  productId   String
+  spesifikasi String?
+  jumlah      Decimal  @db.Decimal(15, 3)
+  satuan      String
+  hargaSatuan Decimal  @db.Decimal(15, 2)
+  subtotal    Decimal  @db.Decimal(15, 2)
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade, map: "ContractItem_contractId_fkey")
+  product  Product  @relation(fields: [productId], references: [id], map: "ContractItem_productId_fkey")
+
+  @@index([contractId], map: "ContractItem_contractId_fkey")
+  @@index([productId], map: "ContractItem_productId_fkey")
+  @@map("contractitem")
+}
+
+model StockMovement {
+  id         String   @id
+  productId  String
+  tipe       String
+  jumlah     Decimal  @db.Decimal(15, 3)
+  keterangan String?
+  userId     String
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], map: "StockMovement_productId_fkey")
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([productId], map: "StockMovement_productId_fkey")
+  @@map("stockmovement")
+}
+
+model Supplier {
+  id           String   @id
+  kode         String   @unique
+  nama         String
+  alamat       String?
+  telepon      String?
+  email        String?
+  npwp         String?
+  kontakPerson String?
+  spesialisasi String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+
+  contracts Contract[]
+  users     User[]
+
+  @@map("supplier")
+}
+
+model AuditLog {
+  id        String   @id
+  userId    String
+  action    String
+  entity    String?
+  entityId  String?
+  detail    String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], map: "AuditLog_userId_fkey")
+
+  @@index([createdAt], map: "AuditLog_createdAt_idx")
+  @@index([userId], map: "AuditLog_userId_idx")
+  @@map("auditlog")
+}
