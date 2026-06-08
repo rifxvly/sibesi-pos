@@ -1,4 +1,4 @@
-import { StatusKontrak, StatusTransaksi, Kategori } from "@prisma/client";
+import { StatusKontrak, StatusTransaksi, KategoriProduk } from "@prisma/client";
 import { ArrowUpRight, ArrowDownRight, Package, Users, Receipt, AlertTriangle, FileText, ChevronRight, Plus, Eye, CheckCircle2, Clock } from "lucide-react";
 import Link from "next/link";
 

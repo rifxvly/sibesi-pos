@@ -1,5 +1,6 @@
-import { PrismaClient, Role, KategoriProduk } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -10,27 +11,29 @@ async function main() {
   const adminPassword = await bcrypt.hash("Admin123!", 10);
   const kasirPassword = await bcrypt.hash("Kasir123!", 10);
 
-  const admin = await prisma.user.upsert({
-    where: { username: "admin" },
-    update: {},
-    create: {
+  const existingAdmin = await prisma.user.findFirst({ where: { username: "admin" } });
+  const admin = existingAdmin ?? await prisma.user.create({
+    data: {
+      id: crypto.randomUUID(),
       username: "admin",
       email: "admin@sibesi.com",
       passwordHash: adminPassword,
       role: Role.ADMIN,
-      isActive: true
+      isActive: true,
+      updatedAt: new Date()
     }
   });
 
-  const kasir1 = await prisma.user.upsert({
-    where: { username: "kasir1" },
-    update: {},
-    create: {
+  const existingKasir = await prisma.user.findFirst({ where: { username: "kasir1" } });
+  const kasir1 = existingKasir ?? await prisma.user.create({
+    data: {
+      id: crypto.randomUUID(),
       username: "kasir1",
       email: "kasir1@sibesi.com",
       passwordHash: kasirPassword,
       role: Role.KASIR,
-      isActive: true
+      isActive: true,
+      updatedAt: new Date()
     }
   });
 
@@ -41,7 +44,7 @@ async function main() {
     {
       kodeBarang: "BSI-001",
       nama: "Besi Beton 10mm",
-      kategori: KategoriProduk.BESI,
+      kategori: "BESI",
       satuan: "batang",
       hargaJual: 55000,
       hargaPokok: 45000,
@@ -51,7 +54,7 @@ async function main() {
     {
       kodeBarang: "BSI-002",
       nama: "Besi Beton 12mm",
-      kategori: KategoriProduk.BESI,
+      kategori: "BESI",
       satuan: "batang",
       hargaJual: 80000,
       hargaPokok: 65000,
@@ -61,7 +64,7 @@ async function main() {
     {
       kodeBarang: "BSI-003",
       nama: "Besi Hollow 4x4",
-      kategori: KategoriProduk.BESI,
+      kategori: "BESI",
       satuan: "batang",
       hargaJual: 120000,
       hargaPokok: 95000,
@@ -71,7 +74,7 @@ async function main() {
     {
       kodeBarang: "SMN-001",
       nama: "Semen Portland 50kg",
-      kategori: KategoriProduk.SEMEN,
+      kategori: "SEMEN",
       satuan: "sak",
       hargaJual: 70000,
       hargaPokok: 58000,
@@ -81,7 +84,7 @@ async function main() {
     {
       kodeBarang: "SMN-002",
       nama: "Semen Putih 50kg",
-      kategori: KategoriProduk.SEMEN,
+      kategori: "SEMEN",
       satuan: "sak",
       hargaJual: 85000,
       hargaPokok: 72000,
@@ -91,7 +94,7 @@ async function main() {
     {
       kodeBarang: "PSR-001",
       nama: "Pasir Halus",
-      kategori: KategoriProduk.PASIR,
+      kategori: "PASIR",
       satuan: "m3",
       hargaJual: 350000,
       hargaPokok: 280000,
@@ -101,7 +104,7 @@ async function main() {
     {
       kodeBarang: "PSR-002",
       nama: "Pasir Beton",
-      kategori: KategoriProduk.PASIR,
+      kategori: "PASIR",
       satuan: "m3",
       hargaJual: 300000,
       hargaPokok: 240000,
@@ -111,7 +114,7 @@ async function main() {
     {
       kodeBarang: "CAT-001",
       nama: "Cat Tembok Putih 20L",
-      kategori: KategoriProduk.CAT,
+      kategori: "CAT",
       satuan: "kaleng",
       hargaJual: 450000,
       hargaPokok: 380000,
@@ -121,7 +124,7 @@ async function main() {
     {
       kodeBarang: "CAT-002",
       nama: "Cat Tembok Cream 20L",
-      kategori: KategoriProduk.CAT,
+      kategori: "CAT",
       satuan: "kaleng",
       hargaJual: 475000,
       hargaPokok: 400000,
@@ -131,7 +134,7 @@ async function main() {
     {
       kodeBarang: "PKU-001",
       nama: "Paku Biasa 5cm",
-      kategori: KategoriProduk.PAKU,
+      kategori: "PAKU",
       satuan: "kg",
       hargaJual: 18000,
       hargaPokok: 14000,
@@ -141,7 +144,7 @@ async function main() {
     {
       kodeBarang: "PKU-002",
       nama: "Paku Beton 7cm",
-      kategori: KategoriProduk.PAKU,
+      kategori: "PAKU",
       satuan: "kg",
       hargaJual: 22000,
       hargaPokok: 17000,
@@ -151,7 +154,7 @@ async function main() {
     {
       kodeBarang: "ALT-001",
       nama: "Palu Besi 1kg",
-      kategori: KategoriProduk.ALAT,
+      kategori: "ALAT",
       satuan: "pcs",
       hargaJual: 85000,
       hargaPokok: 65000,
@@ -161,7 +164,7 @@ async function main() {
     {
       kodeBarang: "ALT-002",
       nama: "Gergaji Besi",
-      kategori: KategoriProduk.ALAT,
+      kategori: "ALAT",
       satuan: "pcs",
       hargaJual: 125000,
       hargaPokok: 95000,
@@ -171,7 +174,7 @@ async function main() {
     {
       kodeBarang: "LAIN-001",
       nama: "Kawat Ikat",
-      kategori: KategoriProduk.LAIN,
+      kategori: "LAIN",
       satuan: "roll",
       hargaJual: 35000,
       hargaPokok: 25000,
@@ -181,7 +184,7 @@ async function main() {
     {
       kodeBarang: "LAIN-002",
       nama: "Seng Gelombang",
-      kategori: KategoriProduk.LAIN,
+      kategori: "LAIN",
       satuan: "lembar",
       hargaJual: 95000,
       hargaPokok: 75000,
@@ -191,11 +194,12 @@ async function main() {
   ];
 
   for (const product of products) {
-    await prisma.product.upsert({
-      where: { kodeBarang: product.kodeBarang },
-      update: {},
-      create: product
+    const existing = await prisma.product.findFirst({
+      where: { kodeBarang: product.kodeBarang }
     });
+    if (!existing) {
+      await prisma.product.create({ data: { ...product, id: crypto.randomUUID(), updatedAt: new Date() } });
+    }
   }
 
   console.log(`  ✅ Products: ${products.length} items`);
@@ -230,7 +234,7 @@ async function main() {
     });
 
     if (!existing) {
-      await prisma.customer.create({ data: customer });
+      await prisma.customer.create({ data: { ...customer, id: crypto.randomUUID() } });
     }
   }
 
