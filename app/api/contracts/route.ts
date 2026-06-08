@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       createdById: actorUserId,
       items: {
         create: parsed.data.items.map((item) => ({
+          id: crypto.randomUUID(),
           productId: item.productId,
           spesifikasi: item.spesifikasi ?? undefined,
           jumlah: new Prisma.Decimal(item.jumlah),
